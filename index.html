@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>My Browser</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #202124;
+  color: white;
+}
+
+
+
+#top {
+  height: 92px;
+  background: #202124;
+}
+
+/* Tabs */
+
+#tabs {
+  height: 42px;
+  display: flex;
+  align-items: flex-end;
+  padding: 5px 8px 0;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+#tabs::-webkit-scrollbar {
+  height: 3px;
+}
+
+#tabs::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
+.tab {
+  height: 37px;
+  min-width: 160px;
+  max-width: 240px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 10px;
+
+  background: #292a2d;
+  border-radius: 9px 9px 0 0;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.tab.active {
+  background: #35363a;
+}
+
+.tab-title {
+  flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.tab-close {
+  width: 24px;
+  height: 24px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+  color: #bbb;
+
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.tab-close:hover {
+  background: #555;
+  color: white;
+}
+
+#newTab {
+  width: 34px;
+  height: 34px;
+
+  margin-left: 5px;
+  margin-bottom: 3px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+  color: white;
+
+  font-size: 23px;
+  cursor: pointer;
+}
+
+#newTab:hover {
+  background: #3c4043;
+}
+
+
+#toolbar {
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 5px;
+
+  padding: 7px 10px;
+
+  background: #292a2d;
+}
+
+.nav-button {
+  width: 35px;
+  height: 35px;
+
+  border: 0;
+  border-radius: 50%;
+
+  background: transparent;
+  color: #ddd;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+
+.nav-button:hover {
+  background: #3c4043;
+}
+
+.nav-button:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+#addressForm {
+  flex: 1;
+}
+
+#address {
+  width: 100%;
+  height: 36px;
+
+  padding: 0 16px;
+
+  border: 0;
+  outline: none;
+  border-radius: 20px;
+
+  background: #202124;
+  color: white;
+
+  font-size: 15px;
+}
+
+#address:focus {
+  background: #171717;
+  box-shadow: 0 0 0 2px #4285f4;
+}
+
+
+
+#pages {
+  position: relative;
+
+  width: 100%;
+  height: calc(100vh - 92px);
+
+  background: white;
+}
+
+webview {
+  position: absolute;
+
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: none;
+
+  border: 0;
+}
+
+webview.active {
+  display: flex;
+}
+
+
+
+.new-tab-page {
+  position: absolute;
+  inset: 0;
+
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(
+      circle at center,
+      #303134 0%,
+      #202124 60%
+    );
+
+  color: white;
+}
+
+.new-tab-page.active {
+  display: flex;
+}
+
+.logo {
+  font-size: 60px;
+  font-weight: 600;
+  margin-bottom: 30px;
+}
+
+.search-box {
+  width: min(600px, 80%);
+  height: 50px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 18px;
+
+  background: #303134;
+
+  border: 1px solid #5f6368;
+  border-radius: 28px;
+
+  box-shadow: 0 2px 8px #0005;
+}
+
+.search-box input {
+  width: 100%;
+
+  border: 0;
+  outline: 0;
+
+  background: transparent;
+  color: white;
+
+  font-size: 17px;
+}
+
+.search-box button {
+  border: 0;
+  background: transparent;
+  color: #aaa;
+
+  font-size: 20px;
+
+  cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="top">
+
+  <div id="tabs"></div>
+
+  <div id="toolbar">
+
+    <button
+      class="nav-button"
+      id="back"
+      title="Back"
+    >←</button>
+
+    <button
+      class="nav-button"
+      id="forward"
+      title="Forward"
+    >→</button>
+
+    <button
+      class="nav-button"
+      id="reload"
+      title="Reload"
+    >↻</button>
+
+    <button
+      class="nav-button"
+      id="home"
+      title="Home"
+    >⌂</button>
+
+    <form id="addressForm">
+      <input
+        id="address"
+        placeholder="Search or enter address"
+        autocomplete="off"
+        spellcheck="false"
+      >
+    </form>
+
+    <button
+      class="nav-button"
+      id="newTab"
+      title="New Tab"
+    >+</button>
+
+  </div>
+
+</div>
+
+
+<div id="pages"></div>
+
+
+<script>
+
+const HOME = "https://www.google.com";
+
+let tabs = [];
+let activeTab = null;
+let nextId = 1;
+
+
+
+const tabsContainer =
+  document.getElementById("tabs");
+
+const pagesContainer =
+  document.getElementById("pages");
+
+const address =
+  document.getElementById("address");
+
+const addressForm =
+  document.getElementById("addressForm");
+
+const back =
+  document.getElementById("back");
+
+const forward =
+  document.getElementById("forward");
+
+const reload =
+  document.getElementById("reload");
+
+const home =
+  document.getElementById("home");
+
+const newTab =
+  document.getElementById("newTab");
+
+
+function getURL(input) {
+
+  input = input.trim();
+
+  if (!input) {
+    return HOME;
+  }
+
+ 
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(input)) {
+    return input;
+  }
+
+ 
+  if (input.startsWith("localhost")) {
+    return "http://" + input;
+  }
+
+
+  if (/^(\d{1,3}\.){3}\d{1,3}/.test(input)) {
+    return "http://" + input;
+  }
+
+
+  if (
+    input.includes(".") &&
+    !input.includes(" ")
+  ) {
+    return "https://" + input;
+  }
+
+
+  return (
+    "https://www.google.com/search?q=" +
+    encodeURIComponent(input)
+  );
+}
+
+
+
+function createTab(url = HOME) {
+
+  const id = nextId++;
+
+  const tabButton =
+    document.createElement("div");
+
+  tabButton.className = "tab";
+
+  tabButton.innerHTML = `
+    <span class="tab-title">
+      New Tab
+    </span>
+
+    <button class="tab-close">
+      ×
+    </button>
+  `;
+
+
+  const page =
+    document.createElement("webview");
+
+  page.src = url;
+
+  page.setAttribute(
+    "allowpopups",
+    ""
+  );
+
+  page.setAttribute(
+    "partition",
+    "persist:browser"
+  );
+
+
+  pagesContainer.appendChild(page);
+
+  tabsContainer.appendChild(tabButton);
+
+
+  const tab = {
+    id,
+    url,
+    title: "New Tab",
+    button: tabButton,
+    page
+  };
+
+
+  tabs.push(tab);
+
+
+  /* Tab click */
+
+  tabButton.addEventListener(
+    "click",
+    () => {
+      activateTab(id);
+    }
+  );
+
+
+  /* Close */
+
+  const close =
+    tabButton.querySelector(".tab-close");
+
+  close.addEventListener(
+    "click",
+    event => {
+
+      event.stopPropagation();
+
+      closeTab(id);
+    }
+  );
+
+
+ 
+  page.addEventListener(
+    "page-title-updated",
+    event => {
+
+      tab.title =
+        event.title || "New Tab";
+
+      tabButton.querySelector(
+        ".tab-title"
+      ).textContent = tab.title;
+    }
+  );
+
+
+  page.addEventListener(
+    "did-navigate",
+    event => {
+
+      tab.url = event.url;
+
+      if (activeTab === id) {
+        address.value = event.url;
+      }
+
+      updateButtons();
+    }
+  );
+
+
+  page.addEventListener(
+    "did-navigate-in-page",
+    event => {
+
+      tab.url = event.url;
+
+      if (activeTab === id) {
+        address.value = event.url;
+      }
+    }
+  );
+
+
+  page.addEventListener(
+    "did-start-loading",
+    () => {
+
+      if (activeTab === id) {
+        reload.textContent = "×";
+      }
+    }
+  );
+
+
+  page.addEventListener(
+    "did-stop-loading",
+    () => {
+
+      if (activeTab === id) {
+        reload.textContent = "↻";
+      }
+
+      updateButtons();
+    }
+  );
+
+
+
+
+  page.addEventListener(
+    "new-window",
+    event => {
+
+      event.preventDefault();
+
+      createTab(event.url);
+    }
+  );
+
+
+  activateTab(id);
+
+  return tab;
+}
+
+
+
+function activateTab(id) {
+
+  const tab =
+    tabs.find(t => t.id === id);
+
+  if (!tab) {
+    return;
+  }
+
+  activeTab = id;
+
+
+  tabs.forEach(t => {
+
+    const selected =
+      t.id === id;
+
+    t.button.classList.toggle(
+      "active",
+      selected
+    );
+
+    t.page.classList.toggle(
+      "active",
+      selected
+    );
+
+  });
+
+
+  address.value =
+    tab.page.getURL() || tab.url;
+
+
+  updateButtons();
+}
+
+
+
+function closeTab(id) {
+
+  const index =
+    tabs.findIndex(t => t.id === id);
+
+  if (index === -1) {
+    return;
+  }
+
+
+  const tab = tabs[index];
+
+  tab.page.remove();
+  tab.button.remove();
+
+  tabs.splice(index, 1);
+
+
+  if (tabs.length === 0) {
+
+    createTab();
+
+    return;
+  }
+
+
+  if (activeTab === id) {
+
+    const next =
+      tabs[Math.max(0, index - 1)];
+
+    activateTab(next.id);
+  }
+}
+
+
+
+function currentTab() {
+
+  return tabs.find(
+    t => t.id === activeTab
+  );
+}
+
+
+
+function navigate(value) {
+
+  const tab = currentTab();
+
+  if (!tab) {
+    return;
+  }
+
+
+  const url = getURL(value);
+
+  tab.url = url;
+
+  tab.page.loadURL(url);
+}
+
+
+function goBack() {
+
+  const tab = currentTab();
+
+  if (
+    tab &&
+    tab.page.canGoBack()
+  ) {
+    tab.page.goBack();
+  }
+}
+
+
+function goForward() {
+
+  const tab = currentTab();
+
+  if (
+    tab &&
+    tab.page.canGoForward()
+  ) {
+    tab.page.goForward();
+  }
+}
+
+
+function reloadPage() {
+
+  const tab = currentTab();
+
+  if (!tab) {
+    return;
+  }
+
+  tab.page.reload();
+}
+
+
+function goHome() {
+
+  navigate(HOME);
+}
+
+
+
+function updateButtons() {
+
+  const tab = currentTab();
+
+  if (!tab) {
+    back.disabled = true;
+    forward.disabled = true;
+    return;
+  }
+
+  back.disabled =
+    !tab.page.canGoBack();
+
+  forward.disabled =
+    !tab.page.canGoForward();
+}
+
+
+
+addressForm.addEventListener(
+  "submit",
+  event => {
+
+    event.preventDefault();
+
+    navigate(address.value);
+
+    address.blur();
+  }
+);
+
+
+address.addEventListener(
+  "focus",
+  () => {
+    address.select();
+  }
+);
+
+
+
+
+back.addEventListener(
+  "click",
+  goBack
+);
+
+forward.addEventListener(
+  "click",
+  goForward
+);
+
+reload.addEventListener(
+  "click",
+  reloadPage
+);
+
+home.addEventListener(
+  "click",
+  goHome
+);
+
+newTab.addEventListener(
+  "click",
+  () => createTab()
+);
+
+
+
+document.addEventListener(
+  "keydown",
+  event => {
+
+    const command =
+      event.ctrlKey ||
+      event.metaKey;
+
+
+
+    if (
+      command &&
+      event.key.toLowerCase() === "l"
+    ) {
+
+      event.preventDefault();
+
+      address.focus();
+      address.select();
+
+      return;
+    }
+
+
+
+    if (
+      command &&
+      event.key.toLowerCase() === "t"
+    ) {
+
+      event.preventDefault();
+
+      createTab();
+
+      return;
+    }
+
+
+    if (
+      command &&
+      event.key.toLowerCase() === "w"
+    ) {
+
+      event.preventDefault();
+
+      if (activeTab !== null) {
+        closeTab(activeTab);
+      }
+
+      return;
+    }
+
+
+
+    if (
+      command &&
+      event.key.toLowerCase() === "r"
+    ) {
+
+      event.preventDefault();
+
+      reloadPage();
+
+      return;
+    }
+
+
+
+    if (
+      event.altKey &&
+      event.key === "ArrowLeft"
+    ) {
+
+      event.preventDefault();
+
+      goBack();
+
+      return;
+    }
+
+
+
+    if (
+      event.altKey &&
+      event.key === "ArrowRight"
+    ) {
+
+      event.preventDefault();
+
+      goForward();
+
+      return;
+    }
+
+  }
+);
+
+
+
+
+createTab();
+
+</script>
+
+</body>
+</html>
